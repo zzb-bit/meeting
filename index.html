@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>会议时间协调工具</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    h1 { color: #2b6cb0; }
+    .ad-section { margin: 2em 0; text-align: center; }
+    input, button, textarea { margin: 0.5em 0; }
+    .result { background: #f0f8ff; padding: 1em; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>会议时间协调工具</h1>
+  <p>适用于职场人士，快速找到大家都方便的会议时间。</p>
+  
+  <h2>输入每个人的可用时间段</h2>
+  <p>格式举例：09:00-11:30, 13:00-15:00</p>
+  
+  <label>参与者1：<br>
+    <input id="time1" placeholder="09:00-11:30, 13:00-15:00" size="30">
+  </label><br>
+  <label>参与者2：<br>
+    <input id="time2" placeholder="09:30-10:30, 13:30-16:00" size="30">
+  </label><br>
+  <label>参与者3：<br>
+    <input id="time3" placeholder="可选，格式同上" size="30">
+  </label><br>
+  <button onclick="findOverlap()">生成会议可选时间</button>
+  
+  <div class="result" id="output"></div>
+
+  <div class="ad-section">
+    <!-- 这里放广告代码，比如Google Adsense、百度联盟等 -->
+    <script>
+      document.write('<a href="https://your-ad-link.com" target="_blank"><img src="https://your-ad-image.jpg" width="300" alt="广告位" /></a>');
+    </script>
+  </div>
+
+  <script>
+    // 辅助函数：将时间字符串转为分钟数
+    function timeToMinutes(t) {
+      let [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    }
+    // 辅助函数：将分钟数转为字符串
+    function minutesToTime(m) {
+      let h = String(Math.floor(m / 60)).padStart(2, '0');
+      let min = String(m % 60).padStart(2, '0');
+      return h + ':' + min;
+    }
+    // 解析时间段字符串
+    function parseRanges(str) {
+      if (!str.trim()) return [];
+      return str.split(",").map(s => s.trim()).map(r => {
+        let [start, end] = r.split("-");
+        return [timeToMinutes(start), timeToMinutes(end)];
+      });
+    }
+    // 求多个参与者的交集
+    function intersectRanges(rangesList) {
+      if (rangesList.length === 0) return [];
+      let result = rangesList[0];
+      for (let i = 1; i < rangesList.length; i++) {
+        let next = [];
+        for (let [s1, e1] of result) {
+          for (let [s2, e2] of rangesList[i]) {
+            let s = Math.max(s1, s2);
+            let e = Math.min(e1, e2);
+            if (s < e) next.push([s, e]);
+          }
+        }
+        result = next;
+        if (result.length === 0) break;
+      }
+      return result;
+    }
+    // 主逻辑
+    function findOverlap() {
+      let t1 = parseRanges(document.getElementById('time1').value);
+      let t2 = parseRanges(document.getElementById('time2').value);
+      let t3 = parseRanges(document.getElementById('time3').value);
+      let rangesList = [t1, t2];
+      if (t3.length) rangesList.push(t3);
+      // 过滤空
+      rangesList = rangesList.filter(r => r.length);
+      let overlap = intersectRanges(rangesList);
+      let output = document.getElementById('output');
+      if (overlap.length === 0) {
+        output.innerHTML = "<strong>没有找到所有人都合适的时间段。</strong>";
+      } else {
+        output.innerHTML = "所有人都合适的会议时间：<br><ul>" +
+          overlap.map(r => `<li>${minutesToTime(r[0])} - ${minutesToTime(r[1])}</li>`).join("") +
+          "</ul>";
+      }
+    }
+  </script>
+</body>
+</html>
